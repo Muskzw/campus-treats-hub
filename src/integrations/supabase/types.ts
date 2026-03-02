@@ -14,16 +14,283 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          campus_id: string
+          created_at: string
+          customer_id: string
+          delivery_fee: number
+          hostel_id: string
+          id: string
+          order_number: string
+          rider_id: string | null
+          room_number: string
+          status: string
+          subtotal: number
+          tip: number | null
+          total: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          campus_id: string
+          created_at?: string
+          customer_id: string
+          delivery_fee?: number
+          hostel_id: string
+          id?: string
+          order_number: string
+          rider_id?: string | null
+          room_number: string
+          status?: string
+          subtotal: number
+          tip?: number | null
+          total: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          campus_id?: string
+          created_at?: string
+          customer_id?: string
+          delivery_fee?: number
+          hostel_id?: string
+          id?: string
+          order_number?: string
+          rider_id?: string | null
+          room_number?: string
+          status?: string
+          subtotal?: number
+          tip?: number | null
+          total?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          in_stock: boolean | null
+          name: string
+          prep_time: string | null
+          price: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean | null
+          name: string
+          prep_time?: string | null
+          price: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean | null
+          name?: string
+          prep_time?: string | null
+          price?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          campus_id: string | null
+          created_at: string
+          full_name: string | null
+          hostel_id: string | null
+          id: string
+          phone: string | null
+          room_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          campus_id?: string | null
+          created_at?: string
+          full_name?: string | null
+          hostel_id?: string | null
+          id?: string
+          phone?: string | null
+          room_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          campus_id?: string | null
+          created_at?: string
+          full_name?: string | null
+          hostel_id?: string | null
+          id?: string
+          phone?: string | null
+          room_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vendors: {
+        Row: {
+          campus_id: string
+          category: string
+          created_at: string
+          delivery_fee: number | null
+          delivery_time: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_approved: boolean | null
+          logo_url: string | null
+          name: string
+          rating: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campus_id: string
+          category: string
+          created_at?: string
+          delivery_fee?: number | null
+          delivery_time?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_approved?: boolean | null
+          logo_url?: string | null
+          name: string
+          rating?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campus_id?: string
+          category?: string
+          created_at?: string
+          delivery_fee?: number | null
+          delivery_time?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_approved?: boolean | null
+          logo_url?: string | null
+          name?: string
+          rating?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "student" | "vendor" | "rider" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +417,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["student", "vendor", "rider", "admin"],
+    },
   },
 } as const

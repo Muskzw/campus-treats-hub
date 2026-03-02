@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCampus } from "@/context/CampusContext";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { campuses, hostels } from "@/lib/data";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Building, DoorOpen, ChevronRight } from "lucide-react";
@@ -9,15 +11,27 @@ import heroImage from "@/assets/hero-delivery.webp";
 const CampusSetup = () => {
   const navigate = useNavigate();
   const { setCampusId, setHostelId, setRoomNumber, campusId, hostelId, roomNumber } = useCampus();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [localCampus, setLocalCampus] = useState(campusId ?? "");
   const [localHostel, setLocalHostel] = useState(hostelId ?? "");
   const [localRoom, setLocalRoom] = useState(roomNumber);
+  const [saving, setSaving] = useState(false);
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
+    setSaving(true);
     setCampusId(localCampus);
     setHostelId(localHostel);
     setRoomNumber(localRoom);
+
+    if (user) {
+      await supabase
+        .from("profiles")
+        .update({ campus_id: localCampus, hostel_id: localHostel, room_number: localRoom })
+        .eq("user_id", user.id);
+    }
+
+    setSaving(false);
     navigate("/");
   };
 
@@ -25,8 +39,7 @@ const CampusSetup = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Hero */}
-      <div className="relative h-56 overflow-hidden bg-primary/10">
+      <div className="relative h-56 overflow-hidden bg-accent">
         <img src={heroImage} alt="Campus delivery" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
@@ -35,7 +48,6 @@ const CampusSetup = () => {
         </div>
       </div>
 
-      {/* Steps */}
       <div className="flex-1 p-4">
         <div className="flex gap-2 mb-6">
           {[0, 1, 2].map((s) => (
@@ -109,10 +121,10 @@ const CampusSetup = () => {
               />
               <button
                 onClick={handleFinish}
-                disabled={!localRoom.trim()}
+                disabled={!localRoom.trim() || saving}
                 className="w-full mt-4 py-3.5 rounded-xl bg-primary text-primary-foreground font-display font-semibold text-sm disabled:opacity-40 transition-opacity"
               >
-                Start Ordering 🚀
+                {saving ? "Saving..." : "Start Ordering 🚀"}
               </button>
               <button onClick={() => setStep(1)} className="mt-3 text-sm text-primary font-medium">← Back</button>
             </motion.div>

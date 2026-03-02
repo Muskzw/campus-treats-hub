@@ -9,9 +9,17 @@ import { Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const Home = () => {
-  const { campusId, hostelId, isSetup } = useCampus();
+  const { campusId, hostelId, isSetup, loading } = useCampus();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isSetup) return <Navigate to="/setup" replace />;
 
@@ -25,7 +33,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <Link to="/setup" className="flex items-center gap-2">
@@ -41,7 +48,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Search */}
       <div className="px-4 mt-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -55,7 +61,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Banner */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -65,13 +70,11 @@ const Home = () => {
         <p className="text-sm opacity-90 mt-1">Order from campus vendors, delivered to your room</p>
       </motion.div>
 
-      {/* Categories */}
       <div className="mt-5">
         <h3 className="px-4 font-display font-semibold text-sm mb-3">Categories</h3>
         <CategoryRow selected={selectedCategory} onSelect={setSelectedCategory} />
       </div>
 
-      {/* Vendors */}
       <div className="mt-5 px-4">
         <h3 className="font-display font-semibold text-sm mb-3">
           {selectedCategory ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} vendors` : "Popular near you"}

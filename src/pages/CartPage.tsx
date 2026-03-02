@@ -1,23 +1,68 @@
 import { useCart } from "@/context/CartContext";
 import { useCampus } from "@/context/CampusContext";
+import { useAuth } from "@/context/AuthContext";
 import BottomNav from "@/components/BottomNav";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 const CartPage = () => {
   const { items, updateQuantity, removeItem, clearCart, total, itemCount } = useCart();
-  const { isSetup } = useCampus();
+  const { isSetup, campusId, hostelId, roomNumber, loading: campusLoading } = useCampus();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [placing, setPlacing] = useState(false);
+
+  if (campusLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isSetup) return <Navigate to="/setup" replace />;
 
   const deliveryFee = itemCount > 0 ? 1.0 : 0;
   const grandTotal = total + deliveryFee;
 
-  const handleCheckout = () => {
-    toast.success("Order placed! 🎉", { description: "Your order is being prepared." });
-    clearCart();
+  const handleCheckout = async () => {
+    if (!user || !campusId || !hostelId) return;
+    setPlacing(true);
+
+    try {
+      // Group items by vendor (from mock data, all have same vendorId pattern)
+      // For now we use a placeholder vendor_id since we're using mock data
+      // In production, products would come from the DB with real vendor_ids
+      const { data: order, error } = await supabase
+        .from("orders")
+        .insert({
+          customer_id: user.id,
+          vendor_id: "00000000-0000-0000-0000-000000000000", // placeholder for mock
+          order_number: "temp", // will be overridden by trigger
+          subtotal: total,
+          delivery_fee: deliveryFee,
+          total: grandTotal,
+          campus_id: campusId,
+          hostel_id: hostelId,
+          room_number: roomNumber,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Order placed! 🎉", { description: `Order ${order.order_number} is being prepared.` });
+      clearCart();
+      navigate("/orders");
+    } catch (err: any) {
+      toast.error("Failed to place order", { description: err.message });
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -31,10 +76,7 @@ const CartPage = () => {
           <ShoppingBag className="w-16 h-16 text-muted-foreground/30 mb-4" />
           <h2 className="font-display font-semibold text-lg">Your cart is empty</h2>
           <p className="text-sm text-muted-foreground mt-1">Add items from the marketplace</p>
-          <Link
-            to="/"
-            className="mt-4 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm"
-          >
+          <Link to="/" className="mt-4 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm">
             Browse Vendors
           </Link>
         </div>
@@ -53,23 +95,14 @@ const CartPage = () => {
                   <h4 className="font-display font-semibold text-sm">{item.product.name}</h4>
                   <p className="text-sm font-semibold text-primary mt-1">${(item.product.price * item.quantity).toFixed(2)}</p>
                   <div className="flex items-center gap-2 mt-2">
-                    <button
-                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                      className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center"
-                    >
+                    <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center">
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                     <span className="text-sm font-semibold w-5 text-center">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground"
-                    >
+                    <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
                       <Plus className="w-3.5 h-3.5" />
                     </button>
-                    <button
-                      onClick={() => removeItem(item.product.id)}
-                      className="ml-auto w-7 h-7 rounded-full bg-destructive/10 flex items-center justify-center text-destructive"
-                    >
+                    <button onClick={() => removeItem(item.product.id)} className="ml-auto w-7 h-7 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -78,7 +111,6 @@ const CartPage = () => {
             ))}
           </AnimatePresence>
 
-          {/* Summary */}
           <div className="mt-4 bg-card rounded-2xl p-4 border border-border space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal</span>
@@ -96,9 +128,10 @@ const CartPage = () => {
 
           <button
             onClick={handleCheckout}
-            className="w-full mt-4 py-3.5 rounded-xl bg-primary text-primary-foreground font-display font-semibold text-sm"
+            disabled={placing}
+            className="w-full mt-4 py-3.5 rounded-xl bg-primary text-primary-foreground font-display font-semibold text-sm disabled:opacity-50"
           >
-            Checkout · ${grandTotal.toFixed(2)}
+            {placing ? "Placing order..." : `Checkout · $${grandTotal.toFixed(2)}`}
           </button>
         </div>
       )}
