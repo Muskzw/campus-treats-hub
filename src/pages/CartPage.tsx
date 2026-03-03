@@ -30,19 +30,19 @@ const CartPage = () => {
   const grandTotal = total + deliveryFee;
 
   const handleCheckout = async () => {
-    if (!user || !campusId || !hostelId) return;
+    if (!user || !campusId || !hostelId || items.length === 0) return;
     setPlacing(true);
 
     try {
-      // Group items by vendor (from mock data, all have same vendorId pattern)
-      // For now we use a placeholder vendor_id since we're using mock data
-      // In production, products would come from the DB with real vendor_ids
+      // Group items by vendor
+      const vendorId = items[0].product.vendor_id;
+
       const { data: order, error } = await supabase
         .from("orders")
         .insert({
           customer_id: user.id,
-          vendor_id: "00000000-0000-0000-0000-000000000000", // placeholder for mock
-          order_number: "temp", // will be overridden by trigger
+          vendor_id: vendorId,
+          order_number: "temp",
           subtotal: total,
           delivery_fee: deliveryFee,
           total: grandTotal,
@@ -54,6 +54,19 @@ const CartPage = () => {
         .single();
 
       if (error) throw error;
+
+      // Insert order items
+      const orderItems = items.map((item) => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+        total_price: item.product.price * item.quantity,
+      }));
+
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+      if (itemsError) throw itemsError;
 
       toast.success("Order placed! 🎉", { description: `Order ${order.order_number} is being prepared.` });
       clearCart();
@@ -90,7 +103,7 @@ const CartPage = () => {
                 exit={{ opacity: 0, x: -100 }}
                 className="flex gap-3 bg-card rounded-2xl p-3 border border-border mb-3"
               >
-                <img src={item.product.image} alt={item.product.name} className="w-16 h-16 rounded-xl object-cover" />
+                <img src={item.product.image_url || "/placeholder.svg"} alt={item.product.name} className="w-16 h-16 rounded-xl object-cover" />
                 <div className="flex-1 min-w-0">
                   <h4 className="font-display font-semibold text-sm">{item.product.name}</h4>
                   <p className="text-sm font-semibold text-primary mt-1">${(item.product.price * item.quantity).toFixed(2)}</p>

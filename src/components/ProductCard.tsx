@@ -1,10 +1,10 @@
-import { Product } from "@/lib/data";
+import { DbProduct } from "@/hooks/useVendors";
 import { useCart } from "@/context/CartContext";
 import { Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 
 type Props = {
-  product: Product;
+  product: DbProduct;
   index: number;
 };
 
@@ -21,7 +21,7 @@ const ProductCard = ({ product, index }: Props) => {
       className="flex gap-3 bg-card rounded-2xl p-3 border border-border"
     >
       <img
-        src={product.image}
+        src={product.image_url || "/placeholder.svg"}
         alt={product.name}
         className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
         loading="lazy"
@@ -45,7 +45,8 @@ const ProductCard = ({ product, index }: Props) => {
             )}
             <button
               onClick={() => addItem(product)}
-              className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity"
+              disabled={!product.in_stock}
+              className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>

@@ -1,5 +1,5 @@
 import { useParams, Navigate, Link } from "react-router-dom";
-import { vendors, products } from "@/lib/data";
+import { useVendor, useVendorProducts } from "@/hooks/useVendors";
 import { useCampus } from "@/context/CampusContext";
 import ProductCard from "@/components/ProductCard";
 import BottomNav from "@/components/BottomNav";
@@ -9,19 +9,25 @@ import { motion } from "framer-motion";
 const VendorPage = () => {
   const { id } = useParams<{ id: string }>();
   const { isSetup } = useCampus();
+  const { data: vendor, isLoading: vLoading } = useVendor(id);
+  const { data: products = [], isLoading: pLoading } = useVendorProducts(id);
 
   if (!isSetup) return <Navigate to="/setup" replace />;
 
-  const vendor = vendors.find((v) => v.id === id);
-  if (!vendor) return <Navigate to="/" replace />;
+  if (vLoading || pLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-  const vendorProducts = products.filter((p) => p.vendorId === vendor.id);
+  if (!vendor) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header Image */}
       <div className="relative h-48">
-        <img src={vendor.image} alt={vendor.name} className="w-full h-full object-cover" />
+        <img src={vendor.image_url || "/placeholder.svg"} alt={vendor.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <Link
           to="/"
@@ -31,7 +37,6 @@ const VendorPage = () => {
         </Link>
       </div>
 
-      {/* Vendor Info */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -42,23 +47,22 @@ const VendorPage = () => {
           <p className="text-sm text-muted-foreground mt-1">{vendor.description}</p>
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-primary text-primary" /> {vendor.rating}
+              <Star className="w-3.5 h-3.5 fill-primary text-primary" /> {vendor.rating ?? 0}
             </span>
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-primary" /> {vendor.deliveryTime}
+              <Clock className="w-3.5 h-3.5 text-primary" /> {vendor.delivery_time || "20-30 min"}
             </span>
             <span className="flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-primary" /> ${vendor.deliveryFee.toFixed(2)} delivery
+              <MapPin className="w-3.5 h-3.5 text-primary" /> ${(vendor.delivery_fee ?? 0).toFixed(2)} delivery
             </span>
           </div>
         </div>
       </motion.div>
 
-      {/* Products */}
       <div className="px-4 mt-5">
         <h2 className="font-display font-semibold text-sm mb-3">Menu</h2>
         <div className="space-y-3">
-          {vendorProducts.map((p, i) => (
+          {products.map((p, i) => (
             <ProductCard key={p.id} product={p} index={i} />
           ))}
         </div>
