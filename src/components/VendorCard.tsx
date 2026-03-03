@@ -1,10 +1,10 @@
-import { Vendor } from "@/lib/data";
+import { DbVendor } from "@/hooks/useVendors";
 import { Star, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 type Props = {
-  vendor: Vendor;
+  vendor: DbVendor;
   index: number;
 };
 
@@ -21,14 +21,14 @@ const VendorCard = ({ vendor, index }: Props) => {
       >
         <div className="relative h-36 overflow-hidden">
           <img
-            src={vendor.image}
+            src={vendor.image_url || "/placeholder.svg"}
             alt={vendor.name}
             className="w-full h-full object-cover"
             loading="lazy"
           />
           <div className="absolute bottom-2 left-2 bg-card/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 text-xs font-medium">
             <Clock className="w-3 h-3 text-primary" />
-            {vendor.deliveryTime}
+            {vendor.delivery_time || "20-30 min"}
           </div>
         </div>
         <div className="p-3">
@@ -39,11 +39,11 @@ const VendorCard = ({ vendor, index }: Props) => {
             </div>
             <div className="flex items-center gap-0.5 bg-accent rounded-full px-2 py-0.5">
               <Star className="w-3 h-3 fill-primary text-primary" />
-              <span className="text-xs font-semibold text-accent-foreground">{vendor.rating}</span>
+              <span className="text-xs font-semibold text-accent-foreground">{vendor.rating ?? 0}</span>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Delivery: ${vendor.deliveryFee.toFixed(2)}
+            Delivery: ${(vendor.delivery_fee ?? 0).toFixed(2)}
           </p>
         </div>
       </Link>

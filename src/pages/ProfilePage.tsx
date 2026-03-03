@@ -1,15 +1,35 @@
 import { useCampus } from "@/context/CampusContext";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { campuses, hostels } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 import { Navigate, Link, useNavigate } from "react-router-dom";
-import { User, MapPin, Settings, LogOut, ChevronRight } from "lucide-react";
+import { User, MapPin, LogOut, ChevronRight, Store, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
 const ProfilePage = () => {
   const { isSetup, campusId, hostelId, roomNumber, loading } = useCampus();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const { data: isVendor } = useQuery({
+    queryKey: ["is-vendor", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("vendors").select("id").eq("user_id", user!.id).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_role", { _user_id: user!.id, _role: "admin" });
+      return data as boolean;
+    },
+    enabled: !!user,
+  });
 
   if (loading) {
     return (
@@ -63,6 +83,31 @@ const ProfilePage = () => {
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
+
+        <Link
+          to={isVendor ? "/vendor-dashboard" : "/vendor-register"}
+          className="flex items-center justify-between px-4 py-3.5 hover:bg-accent/50 transition-colors border-b border-border"
+        >
+          <div className="flex items-center gap-3">
+            <Store className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{isVendor ? "Vendor Dashboard" : "Become a Vendor"}</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+
+        {isAdmin && (
+          <Link
+            to="/admin"
+            className="flex items-center justify-between px-4 py-3.5 hover:bg-accent/50 transition-colors border-b border-border"
+          >
+            <div className="flex items-center gap-3">
+              <Shield className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Admin Dashboard</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </Link>
+        )}
+
         <button
           onClick={handleLogout}
           className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-accent/50 transition-colors text-left"

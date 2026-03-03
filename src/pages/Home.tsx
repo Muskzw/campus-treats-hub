@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCampus } from "@/context/CampusContext";
-import { vendors, campuses, hostels } from "@/lib/data";
+import { useVendors } from "@/hooks/useVendors";
+import { campuses, hostels } from "@/lib/data";
 import CategoryRow from "@/components/CategoryRow";
 import VendorCard from "@/components/VendorCard";
 import BottomNav from "@/components/BottomNav";
@@ -12,6 +13,7 @@ const Home = () => {
   const { campusId, hostelId, isSetup, loading } = useCampus();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: vendors = [], isLoading: vendorsLoading } = useVendors(campusId);
 
   if (loading) {
     return (
@@ -27,7 +29,6 @@ const Home = () => {
   const hostel = hostels[campusId!]?.find((h) => h.id === hostelId);
 
   const filtered = vendors
-    .filter((v) => v.campus === campusId)
     .filter((v) => !selectedCategory || v.category === selectedCategory)
     .filter((v) => !searchQuery || v.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -79,7 +80,11 @@ const Home = () => {
         <h3 className="font-display font-semibold text-sm mb-3">
           {selectedCategory ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} vendors` : "Popular near you"}
         </h3>
-        {filtered.length === 0 ? (
+        {vendorsLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm">
             No vendors found. Try a different category or search.
           </div>

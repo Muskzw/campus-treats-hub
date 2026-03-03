@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCampus } from "@/context/CampusContext";
-import { vendors } from "@/lib/data";
+import { useVendors } from "@/hooks/useVendors";
 import VendorCard from "@/components/VendorCard";
 import CategoryRow from "@/components/CategoryRow";
 import BottomNav from "@/components/BottomNav";
@@ -11,13 +11,13 @@ const ExplorePage = () => {
   const { isSetup, campusId } = useCampus();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const { data: vendors = [], isLoading } = useVendors(campusId);
 
   if (!isSetup) return <Navigate to="/setup" replace />;
 
   const filtered = vendors
-    .filter((v) => v.campus === campusId)
     .filter((v) => !selectedCategory || v.category === selectedCategory)
-    .filter((v) => !query || v.name.toLowerCase().includes(query.toLowerCase()) || v.description.toLowerCase().includes(query.toLowerCase()));
+    .filter((v) => !query || v.name.toLowerCase().includes(query.toLowerCase()) || (v.description || "").toLowerCase().includes(query.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -40,7 +40,11 @@ const ExplorePage = () => {
       </div>
 
       <div className="px-4 mt-4 grid gap-3">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm">No results found</div>
         ) : (
           filtered.map((v, i) => <VendorCard key={v.id} vendor={v} index={i} />)
