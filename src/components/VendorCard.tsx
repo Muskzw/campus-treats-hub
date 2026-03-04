@@ -1,5 +1,5 @@
 import { DbVendor } from "@/hooks/useVendors";
-import { Star, Clock } from "lucide-react";
+import { Star, Clock, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -13,38 +13,48 @@ const VendorCard = ({ vendor, index }: Props) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08, duration: 0.4 }}
+      transition={{ delay: index * 0.06, duration: 0.35 }}
     >
       <Link
         to={`/vendor/${vendor.id}`}
-        className="block bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-border"
+        className="block bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all hover:shadow-md group"
       >
-        <div className="relative h-36 overflow-hidden">
+        <div className="relative h-40 overflow-hidden">
           <img
             src={vendor.image_url || "/placeholder.svg"}
             alt={vendor.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
-          <div className="absolute bottom-2 left-2 bg-card/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 text-xs font-medium">
-            <Clock className="w-3 h-3 text-primary" />
-            {vendor.delivery_time || "20-30 min"}
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+          
+          {/* Overlay info */}
+          <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+            <div>
+              <h3 className="font-display font-bold text-base text-card">{vendor.name}</h3>
+              <p className="text-xs text-card/80 line-clamp-1">{vendor.description}</p>
+            </div>
+            <div className="flex items-center gap-1 bg-card/90 backdrop-blur-sm rounded-full px-2 py-1">
+              <Star className="w-3 h-3 fill-primary text-primary" />
+              <span className="text-xs font-bold">{vendor.rating ?? 0}</span>
+            </div>
           </div>
         </div>
-        <div className="p-3">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-display font-semibold text-sm">{vendor.name}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{vendor.description}</p>
-            </div>
-            <div className="flex items-center gap-0.5 bg-accent rounded-full px-2 py-0.5">
-              <Star className="w-3 h-3 fill-primary text-primary" />
-              <span className="text-xs font-semibold text-accent-foreground">{vendor.rating ?? 0}</span>
-            </div>
+        
+        <div className="px-3 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-primary" />
+              {vendor.delivery_time || "20-30 min"}
+            </span>
+            <span className="flex items-center gap-1">
+              <Truck className="w-3.5 h-3.5 text-primary" />
+              ${(vendor.delivery_fee ?? 0).toFixed(2)}
+            </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Delivery: ${(vendor.delivery_fee ?? 0).toFixed(2)}
-          </p>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+            {vendor.category}
+          </span>
         </div>
       </Link>
     </motion.div>
