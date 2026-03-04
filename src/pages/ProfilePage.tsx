@@ -5,7 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { campuses, hostels } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 import { Navigate, Link, useNavigate } from "react-router-dom";
-import { User, MapPin, LogOut, ChevronRight, Store, Shield, Phone, Pencil, Check, X } from "lucide-react";
+import {
+  User, MapPin, LogOut, ChevronRight, Store, Shield,
+  Phone, Pencil, Check, X, ShoppingCart
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -258,8 +261,5 @@ const ProfilePage = () => {
     </div>
   );
 };
-
-// Need to import ShoppingCart for the menu
-import { ShoppingCart } from "lucide-react";
 
 export default ProfilePage;
