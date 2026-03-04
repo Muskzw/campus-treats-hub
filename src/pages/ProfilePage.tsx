@@ -1,17 +1,32 @@
 import { useCampus } from "@/context/CampusContext";
 import { useAuth } from "@/context/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { campuses, hostels } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 import { Navigate, Link, useNavigate } from "react-router-dom";
-import { User, MapPin, LogOut, ChevronRight, Store, Shield } from "lucide-react";
+import { User, MapPin, LogOut, ChevronRight, Store, Shield, Phone, Pencil, Check, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const ProfilePage = () => {
   const { isSetup, campusId, hostelId, roomNumber, loading } = useCampus();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("*").eq("user_id", user!.id).single();
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const { data: isVendor } = useQuery({
     queryKey: ["is-vendor", user?.id],
@@ -29,6 +44,31 @@ const ProfilePage = () => {
       return data as boolean;
     },
     enabled: !!user,
+  });
+
+  const { data: userRoles = [] } = useQuery({
+    queryKey: ["my-roles", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user!.id);
+      return data?.map((r) => r.role) || [];
+    },
+    enabled: !!user,
+  });
+
+  const updateProfile = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: editName, phone: editPhone })
+        .eq("user_id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setEditing(false);
+      toast.success("Profile updated");
+    },
+    onError: (err: any) => toast.error(err.message),
   });
 
   if (loading) {
@@ -49,29 +89,112 @@ const ProfilePage = () => {
     navigate("/auth");
   };
 
+  const startEditing = () => {
+    setEditName(profile?.full_name || user?.user_metadata?.full_name || "");
+    setEditPhone(profile?.phone || "");
+    setEditing(true);
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3">
+      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
         <h1 className="font-display font-bold text-lg">Profile</h1>
+        {!editing && (
+          <button onClick={startEditing} className="flex items-center gap-1 text-xs text-primary font-semibold">
+            <Pencil className="w-3.5 h-3.5" /> Edit
+          </button>
+        )}
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-4 mt-4 bg-card rounded-2xl p-5 border border-border text-center"
+        className="mx-4 mt-4 bg-card rounded-2xl p-5 border border-border"
       >
-        <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center mx-auto">
-          <User className="w-8 h-8 text-accent-foreground" />
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+            <User className="w-8 h-8 text-accent-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            {editing ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Full name"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+                <div className="flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="Phone number"
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updateProfile.mutate()}
+                    disabled={updateProfile.isPending}
+                    className="flex items-center gap-1 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold"
+                  >
+                    <Check className="w-3 h-3" /> Save
+                  </button>
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="flex items-center gap-1 px-4 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-semibold"
+                  >
+                    <X className="w-3 h-3" /> Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2 className="font-display font-bold text-lg truncate">
+                  {profile?.full_name || user?.user_metadata?.full_name || "Student"}
+                </h2>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                {profile?.phone && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                    <Phone className="w-3 h-3" /> {profile.phone}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
         </div>
-        <h2 className="font-display font-bold text-lg mt-3">
-          {user?.user_metadata?.full_name || "Student"}
-        </h2>
-        <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {campus?.name} · {hostel?.name} · {roomNumber}
-        </p>
+
+        {/* Role badges */}
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {userRoles.map((role) => (
+            <span
+              key={role}
+              className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                role === "admin"
+                  ? "bg-destructive/10 text-destructive"
+                  : role === "vendor"
+                  ? "bg-primary/10 text-primary"
+                  : role === "rider"
+                  ? "bg-warning/10 text-warning"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {role}
+            </span>
+          ))}
+        </div>
+
+        {!editing && (
+          <p className="text-xs text-muted-foreground mt-2">
+            📍 {campus?.name} · {hostel?.name} · {roomNumber}
+          </p>
+        )}
       </motion.div>
 
+      {/* Menu Items */}
       <div className="mx-4 mt-4 bg-card rounded-2xl border border-border overflow-hidden">
         <Link
           to="/setup"
@@ -80,6 +203,17 @@ const ProfilePage = () => {
           <div className="flex items-center gap-3">
             <MapPin className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Edit Delivery Location</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+
+        <Link
+          to="/orders"
+          className="flex items-center justify-between px-4 py-3.5 hover:bg-accent/50 transition-colors border-b border-border"
+        >
+          <div className="flex items-center gap-3">
+            <ShoppingCart className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Order History</span>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
@@ -124,5 +258,8 @@ const ProfilePage = () => {
     </div>
   );
 };
+
+// Need to import ShoppingCart for the menu
+import { ShoppingCart } from "lucide-react";
 
 export default ProfilePage;
