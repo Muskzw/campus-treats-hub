@@ -6,7 +6,9 @@ import { Package, CheckCircle, Clock, Truck, ChefHat } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
 import type { Tables } from "@/integrations/supabase/types";
+import { Link } from "react-router-dom";
 
 type Order = Tables<"orders">;
 
@@ -36,6 +38,8 @@ const OrdersPage = () => {
     },
     enabled: !!user,
   });
+
+  useRealtimeOrders([["orders", user?.id ?? ""]], "customer_id", user?.id);
 
   if (campusLoading) {
     return (
@@ -90,7 +94,7 @@ const OrdersPage = () => {
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                   <span className="text-sm font-display font-semibold">${Number(order.total).toFixed(2)}</span>
                   {order.status !== "delivered" && order.status !== "cancelled" && (
-                    <span className="text-xs text-primary font-medium">Track Order →</span>
+                    <Link to={`/order/${order.id}`} className="text-xs text-primary font-medium">Track Order →</Link>
                   )}
                 </div>
               </motion.div>
