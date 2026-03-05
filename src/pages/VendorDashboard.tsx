@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import ImageUpload from "@/components/ImageUpload";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
@@ -218,7 +219,18 @@ const VendorDashboard = () => {
             <div><Label className="text-xs">Price ($)</Label><Input type="number" step="0.01" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} placeholder="0.00" /></div>
             <div><Label className="text-xs">Description</Label><Textarea value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} placeholder="Short description" /></div>
             <div><Label className="text-xs">Prep Time</Label><Input value={newProduct.prep_time} onChange={(e) => setNewProduct({ ...newProduct, prep_time: e.target.value })} placeholder="e.g. 15 min" /></div>
-            <div><Label className="text-xs">Image URL</Label><Input value={newProduct.image_url} onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })} placeholder="https://..." /></div>
+            <div>
+              <Label className="text-xs">Product Image</Label>
+              <div className="mt-1">
+                <ImageUpload
+                  currentUrl={newProduct.image_url}
+                  onUpload={(url) => setNewProduct({ ...newProduct, image_url: url })}
+                  folder="products"
+                  size="md"
+                  placeholder="Upload photo"
+                />
+              </div>
+            </div>
             <button
               onClick={() => addProductMutation.mutate()}
               disabled={!newProduct.name || !newProduct.price || addProductMutation.isPending}

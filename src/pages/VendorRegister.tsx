@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { campuses, categories } from "@/lib/data";
+import ImageUpload from "@/components/ImageUpload";
 
 const VendorRegister = () => {
   const { user } = useAuth();
@@ -86,7 +87,18 @@ const VendorRegister = () => {
           </div>
           <div><Label>Delivery Fee ($)</Label><Input type="number" step="0.01" value={form.delivery_fee} onChange={(e) => setForm({ ...form, delivery_fee: e.target.value })} /></div>
           <div><Label>Delivery Time</Label><Input value={form.delivery_time} onChange={(e) => setForm({ ...form, delivery_time: e.target.value })} placeholder="e.g. 20-30 min" /></div>
-          <div><Label>Cover Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." /></div>
+          <div>
+            <Label>Cover Image</Label>
+            <div className="mt-1">
+              <ImageUpload
+                currentUrl={form.image_url}
+                onUpload={(url) => setForm({ ...form, image_url: url })}
+                folder="vendors"
+                size="lg"
+                placeholder="Upload cover image"
+              />
+            </div>
+          </div>
 
           <button
             onClick={handleSubmit}
