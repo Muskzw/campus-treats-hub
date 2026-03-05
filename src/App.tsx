@@ -18,6 +18,7 @@ import AuthPage from "./pages/AuthPage";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorRegister from "./pages/VendorRegister";
 import AdminDashboard from "./pages/AdminDashboard";
+import OrderTrackingPage from "./pages/OrderTrackingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
                 <Route path="/explore" element={<ProtectedRoute><ExplorePage /></ProtectedRoute>} />
                 <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+                <Route path="/order/:id" element={<ProtectedRoute><OrderTrackingPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
                 <Route path="/vendor-register" element={<ProtectedRoute><VendorRegister /></ProtectedRoute>} />

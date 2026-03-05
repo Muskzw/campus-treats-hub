@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
 import { toast } from "sonner";
 import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, Plus, Package, ShoppingCart, DollarSign, Pencil, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
