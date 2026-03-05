@@ -12,6 +12,7 @@ import {
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
+import ImageUpload from "@/components/ImageUpload";
 
 const ProfilePage = () => {
   const { isSetup, campusId, hostelId, roomNumber, loading } = useCampus();
@@ -115,8 +116,25 @@ const ProfilePage = () => {
         className="mx-4 mt-4 bg-card rounded-2xl p-5 border border-border"
       >
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-            <User className="w-8 h-8 text-accent-foreground" />
+          <div className="flex-shrink-0">
+            {editing ? (
+              <ImageUpload
+                currentUrl={profile?.avatar_url}
+                onUpload={async (url) => {
+                  await supabase.from("profiles").update({ avatar_url: url }).eq("user_id", user!.id);
+                  queryClient.invalidateQueries({ queryKey: ["profile"] });
+                }}
+                folder="avatars"
+                shape="circle"
+                size="sm"
+              />
+            ) : profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
+                <User className="w-8 h-8 text-accent-foreground" />
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             {editing ? (
