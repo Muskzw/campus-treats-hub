@@ -59,6 +59,8 @@ const VendorDashboard = () => {
     enabled: !!vendor,
   });
 
+  useRealtimeOrders([["vendor-orders", vendor?.id ?? ""]], "vendor_id", vendor?.id);
+
   const addProductMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("products").insert({
