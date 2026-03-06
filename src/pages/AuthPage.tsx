@@ -205,6 +205,12 @@ const AuthPage = () => {
             </button>
           </div>
 
+          {isLogin && (
+            <button type="button" onClick={() => { setForgotMode(true); setError(""); }} className="text-xs text-primary font-medium text-right w-full">
+              Forgot password?
+            </button>
+          )}
+
           {error && <p className="text-xs text-destructive font-medium">{error}</p>}
 
           <button
