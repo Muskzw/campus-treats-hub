@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Navigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import heroImage from "@/assets/hero-delivery.webp";
 
 const AuthPage = () => {
@@ -15,6 +17,8 @@ const AuthPage = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   if (loading) {
     return (
@@ -58,6 +62,72 @@ const AuthPage = () => {
         <button onClick={() => { setSignupSuccess(false); setIsLogin(true); }} className="mt-6 text-sm text-primary font-medium">
           Back to login
         </button>
+      </div>
+    );
+  }
+
+  if (resetSent) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-5xl mb-4">📧</motion.div>
+        <h2 className="font-display font-bold text-xl">Reset link sent!</h2>
+        <p className="text-sm text-muted-foreground mt-2 max-w-sm">Check <strong>{email}</strong> for a password reset link.</p>
+        <button onClick={() => { setResetSent(false); setForgotMode(false); setIsLogin(true); }} className="mt-6 text-sm text-primary font-medium">
+          Back to login
+        </button>
+      </div>
+    );
+  }
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) { setError("Enter your email address"); return; }
+    setSubmitting(true);
+    setError("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setSubmitting(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setResetSent(true);
+    }
+  };
+
+  if (forgotMode) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="relative h-44 overflow-hidden">
+          <img src={heroImage} alt="CampusGoodies" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+          <div className="absolute bottom-4 left-4">
+            <h1 className="font-display text-2xl font-bold">Reset Password 🔑</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">We'll send you a reset link</p>
+          </div>
+        </div>
+        <div className="flex-1 p-5">
+          <form onSubmit={handleForgot} className="space-y-3">
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-card border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+            {error && <p className="text-xs text-destructive font-medium">{error}</p>}
+            <button type="submit" disabled={submitting} className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-display font-semibold text-sm disabled:opacity-50">
+              {submitting ? "Sending..." : "Send Reset Link"}
+            </button>
+          </form>
+          <button onClick={() => { setForgotMode(false); setError(""); }} className="mt-4 text-sm text-primary font-medium w-full text-center">
+            Back to login
+          </button>
+        </div>
       </div>
     );
   }
@@ -134,6 +204,12 @@ const AuthPage = () => {
               {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
             </button>
           </div>
+
+          {isLogin && (
+            <button type="button" onClick={() => { setForgotMode(true); setError(""); }} className="text-xs text-primary font-medium text-right w-full">
+              Forgot password?
+            </button>
+          )}
 
           {error && <p className="text-xs text-destructive font-medium">{error}</p>}
 
