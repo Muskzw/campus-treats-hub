@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useCampus } from "@/context/CampusContext";
 import { useAuth } from "@/context/AuthContext";
 import BottomNav from "@/components/BottomNav";
@@ -7,6 +8,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
+import { useCustomerOrderNotifications, requestNotificationPermission } from "@/hooks/useOrderNotifications";
 import type { Tables } from "@/integrations/supabase/types";
 import { Link } from "react-router-dom";
 
@@ -40,6 +42,11 @@ const OrdersPage = () => {
   });
 
   useRealtimeOrders([["orders", user?.id ?? ""]], "customer_id", user?.id);
+  useCustomerOrderNotifications(user?.id);
+
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   if (campusLoading) {
     return (
