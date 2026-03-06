@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { DbProduct } from "@/hooks/useVendors";
+import { toast } from "sonner";
 
 export type CartItem = {
   product: DbProduct;
@@ -16,13 +17,43 @@ type CartContextType = {
   itemCount: number;
 };
 
+const CART_KEY = "campustreats_cart";
+
+function loadCart(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCart(items: CartItem[]) {
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(items));
+  } catch {}
+}
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(loadCart);
+
+  useEffect(() => {
+    saveCart(items);
+  }, [items]);
 
   const addItem = useCallback((product: DbProduct) => {
     setItems((prev) => {
+      // Check if cart has items from a different vendor
+      if (prev.length > 0 && prev[0].product.vendor_id !== product.vendor_id) {
+        const confirmed = window.confirm(
+          "Your cart has items from a different vendor. Clear cart and add this item?"
+        );
+        if (!confirmed) return prev;
+        return [{ product, quantity: 1 }];
+      }
+
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
         return prev.map((i) =>
