@@ -61,6 +61,11 @@ const VendorDashboard = () => {
   });
 
   useRealtimeOrders([["vendor-orders", vendor?.id ?? ""]], "vendor_id", vendor?.id);
+  useVendorOrderNotifications(vendor?.id);
+
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   const addProductMutation = useMutation({
     mutationFn: async () => {
